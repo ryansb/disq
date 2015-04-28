@@ -357,5 +357,10 @@ class DisqueAlpha(object):
     def qlen(self, queue):
         return self.execute_command('QLEN', queue)
 
+    def qstat(self, queue):
+        raise NotImplementedError("Sorry, QSTAT isn't implemented in disque "
+                                  "yet, so clients can't use it")
+
+
     def qpeek(self, queue, count):
         return self.execute_command('QPEEK', queue, count)

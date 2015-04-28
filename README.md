@@ -26,6 +26,10 @@ c.getjob('queuename')
 - [x] FASTACK
 - [x] QLEN
 - [x] QPEEK
+- [x] DELJOB
+- [x] SHOW
+- [x] DEQUEUE
+- [x] ENQUEUE
 
 ## TODO
 
@@ -33,11 +37,7 @@ c.getjob('queuename')
 - [ ] Write tests
 - [ ] Write benchmarks
 - [ ] QSTAT
-- [ ] DELJOB
-- [ ] SHOW
 - [ ] SCAN
-- [ ] DEQUEUE
-- [ ] ENQUEUE
 
 ## License
 
