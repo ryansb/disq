@@ -12,28 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import with_statement
-import warnings
-from redis._compat import (b, basestring, bytes, imap, iteritems, iterkeys,
-                           itervalues, izip, long, nativestr, unicode)
+import six
+
 from redis.connection import (ConnectionPool, UnixDomainSocketConnection,
-                              SSLConnection, Token)
+                              Token)
 from redis.exceptions import (
     ConnectionError,
-    DataError,
-    ExecAbortError,
-    NoScriptError,
-    PubSubError,
     RedisError,
-    ResponseError,
     TimeoutError,
-    WatchError,
 )
-
-DisqueError = RedisError
 
 from redis.client import (dict_merge, string_keys_to_dict, parse_client_list,
                           bool_ok, parse_config_get, parse_debug_object)
+
+DisqueError = RedisError
+
 
 def parse_job_resp(response):
     if response is None:
@@ -56,13 +49,13 @@ class DisqueAlpha(object):
             'GETJOB', parse_job_resp
         ),
         string_keys_to_dict(
-            'QLEN ACKJOB FASTACK', int
+            'QLEN ACKJOB FASTACK', six.integer_types
         ),
         string_keys_to_dict(
-            'ADDJOB', bytes
+            'ADDJOB', six.binary_type
         ),
         {
-            'CLIENT GETNAME': lambda r: r and nativestr(r),
+            'CLIENT GETNAME': lambda r: r and six.text_type(r),
             'CLIENT KILL': bool_ok,
             'CLIENT LIST': parse_client_list,
             'CLIENT SETNAME': bool_ok,
@@ -304,7 +297,6 @@ class DisqueAlpha(object):
         """
         return self.execute_command('TIME')
 
-
     # BASIC JOB COMMANDS
 
     def addjob(self, queue, body, timeout_ms=0, replicate=0, delay_secs=0,
@@ -325,10 +317,26 @@ class DisqueAlpha(object):
 
         return self.execute_command(*args)
 
-    def getjob(self, *queues, timeout_ms=0, count=1):
+    def getjob(self, queue, timeout_ms=0, count=1, queues=None):
+        """ This function accepts a queue name as "queue" and a list of
+        additional queues as "queues="
+
+        e.x. `getjob('firstone', queues=['another', 'and', 'another'])`
+
+        History: This function signature is odd because of Python 2.7
+        compatibility.
+
+        PEP 3102 means the following works in Python 3.x:
+            def getjob(self, *queues, timeout_ms=0, count=1):
+                return self.execute_command('GETJOB', *queues)
+
+        But that throws a SyntaxError in anything less than Python 3
+        """
+        if queues is None:
+            queues = []
         return self.execute_command(
             'GETJOB', Token('TIMEOUT'), timeout_ms, Token('COUNT'), count,
-            Token('FROM'), *queues)
+            Token('FROM'), queue, *queues)
 
     def ackjob(self, *jobs):
         return self.execute_command('ACKJOB', *jobs)
@@ -360,7 +368,6 @@ class DisqueAlpha(object):
     def qstat(self, queue):
         raise NotImplementedError("Sorry, QSTAT isn't implemented in disque "
                                   "yet, so clients can't use it")
-
 
     def qpeek(self, queue, count):
         return self.execute_command('QPEEK', queue, count)
