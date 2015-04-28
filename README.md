@@ -42,8 +42,8 @@ c.getjob('queuename')
 ## Thanks
 
 Enormous thanks to Salvatore Sanfilippo (antirez) for writing
-[disque][https://github.com/antirez/disque] and
-[Andy McCurdy][https://github.com/andymccurdy], author of the
-[redis-py][https://github.com/andymccurdy/redis-py] module.
+[disque](https://github.com/antirez/disque) and
+[Andy McCurdy](https://github.com/andymccurdy), author of the
+[redis-py](https://github.com/andymccurdy/redis-py) module.
 
 [clients]: https://github.com/antirez/disque#client-libraries
