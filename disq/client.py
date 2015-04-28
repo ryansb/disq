@@ -63,53 +63,32 @@ class DisqueAlpha(object):
     )
 
     @classmethod
-    def from_url(cls, url, db=None, **kwargs):
+    def from_url(cls, url, **kwargs):
         """
         Return a Disque client object configured from the given URL.
 
         For example::
 
-            disque://[:password]@localhost:6379/0
-            unix://[:password]@/path/to/socket.sock?db=0
-
-        There are several ways to specify a database number. The parse function
-        will return the first specified option:
-            1. A ``db`` querystring option, e.g. disque://localhost?db=0
-            2. If using the redis:// scheme, the path argument of the url, e.g.
-               redis://localhost/0
-            3. The ``db`` argument to this function.
-
-        If none of these options are specified, db=0 is used.
+            disque://[:password]@localhost:6379
+            unix://[:password]@/path/to/socket.sock
 
         Any additional querystring arguments and keyword arguments will be
         passed along to the ConnectionPool class's initializer. In the case
         of conflicting arguments, querystring arguments always win.
         """
-        connection_pool = ConnectionPool.from_url(url, db=db, **kwargs)
+        connection_pool = ConnectionPool.from_url(url, **kwargs)
         return cls(connection_pool=connection_pool)
 
     def __init__(self, host='localhost', port=7711,
-                 db=0, password=None, socket_timeout=None,
+                 password=None, socket_timeout=None,
                  socket_connect_timeout=None,
                  socket_keepalive=None, socket_keepalive_options=None,
                  connection_pool=None, unix_socket_path=None,
                  encoding='utf-8', encoding_errors='strict',
-                 charset=None, errors=None,
-                 decode_responses=False, retry_on_timeout=False,
-                 ssl=False, ssl_keyfile=None, ssl_certfile=None,
-                 ssl_cert_reqs=None, ssl_ca_certs=None):
-        if not connection_pool:
-            if charset is not None:
-                warnings.warn(DeprecationWarning(
-                    '"charset" is deprecated. Use "encoding" instead'))
-                encoding = charset
-            if errors is not None:
-                warnings.warn(DeprecationWarning(
-                    '"errors" is deprecated. Use "encoding_errors" instead'))
-                encoding_errors = errors
+                 decode_responses=False, retry_on_timeout=False):
 
+        if not connection_pool:
             kwargs = {
-                'db': db,
                 'password': password,
                 'socket_timeout': socket_timeout,
                 'encoding': encoding,
