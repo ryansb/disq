@@ -32,7 +32,8 @@ from redis.exceptions import (
 
 DisqueError = RedisError
 
-from redis.client import dict_merge, string_keys_to_dict
+from redis.client import (dict_merge, string_keys_to_dict, parse_client_list,
+                          bool_ok, parse_config_get, parse_debug_object)
 
 def parse_job_resp(response):
     if response is None:
@@ -60,6 +61,17 @@ class DisqueAlpha(object):
         string_keys_to_dict(
             'ADDJOB', bytes
         ),
+        {
+            'CLIENT GETNAME': lambda r: r and nativestr(r),
+            'CLIENT KILL': bool_ok,
+            'CLIENT LIST': parse_client_list,
+            'CLIENT SETNAME': bool_ok,
+            'CONFIG GET': parse_config_get,
+            'CONFIG RESETSTAT': bool_ok,
+            'CONFIG SET': bool_ok,
+            'DEBUG OBJECT': parse_debug_object,
+        },
+        string_keys_to_dict('BGREWRITEAOF', lambda r: True),
     )
 
     @classmethod
@@ -185,9 +197,56 @@ class DisqueAlpha(object):
         "Rewrite config file with the minimal change to reflect running config"
         return self.execute_command('CONFIG REWRITE')
 
-    def debug_object(self, key):
-        "Returns version specific meta information about a given key"
-        return self.execute_command('DEBUG OBJECT', key)
+    # Danger: debug commands ahead
+
+    def debug_segfault(self):
+        """ Danger: will segfault connected Disque instance"""
+        return self.execute_command('DEBUG SEGFAULT')
+
+    def debug_oom(self):
+        """ Danger: will OOM connected Disque instance"""
+        return self.execute_command('DEBUG OOM')
+
+    def debug_flushall(self):
+        return self.execute_command('DEBUG FLUSHALL')
+
+    def debug_loadaof(self):
+        return self.execute_command('DEBUG LOADAOF')
+
+    def debug_sleep(self, sleep_secs):
+        return self.execute_command('DEBUG SLEEP', sleep_secs)
+
+    def debug_error(self, message):
+        return self.execute_command('DEBUG ERROR', message)
+
+    def debug_structsize(self):
+        return self.execute_command('DEBUG STRUCTSIZE')
+
+    # Cluster admin commands
+
+    def cluster_meet(self, ip, port):
+        return self.execute_command('CLUSTER MEET', ip, port)
+
+    def cluster_nodes(self):
+        return self.execute_command('CLUSTER NODES')
+
+    def cluster_saveconfig(self):
+        return self.execute_command('CLUSTER SAVECONFIG')
+
+    def cluster_forget(self, node):
+        return self.execute_command('CLUSTER FORGET', node)
+
+    def _cluster_reset(self, reset):
+        return self.execute_command('CLUSTER RESET', reset)
+
+    def cluster_reset_hard(self):
+        return self._cluster_reset(Token('HARD'))
+
+    def cluster_reset_soft(self):
+        return self._cluster_reset(Token('SOFT'))
+
+    def cluster_info(self):
+        return self.execute_command('CLUSTER INFO')
 
     def info(self, section=None):
         """
