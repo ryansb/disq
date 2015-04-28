@@ -1,9 +1,9 @@
 import pkg_resources
 
-from disque.client import DisqueAlpha
+from disq.client import DisqueAlpha
 
 Disque = DisqueAlpha
 
 __all__ = ['DisqueAlpha', 'Disque']
 
-__version__ = pkg_resources.get_distribution('disque').version
+__version__ = pkg_resources.get_distribution('disq').version

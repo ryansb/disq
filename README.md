@@ -22,5 +22,28 @@ c.getjob('queuename')
 - [x] Server commands (slowlog, clients, etc)
 - [x] ADDJOB
 - [x] GETJOB
-- [ ] ACKJOB
-- [ ] FASTACK
+- [x] ACKJOB
+- [x] FASTACK
+- [x] QLEN
+- [x] QPEEK
+
+## TODO
+
+- [ ] Make connection pool support multiple nodes as specified [here][clients]
+- [ ] Write tests
+- [ ] Write benchmarks
+- [ ] QSTAT
+- [ ] DELJOB
+- [ ] SHOW
+- [ ] SCAN
+- [ ] DEQUEUE
+- [ ] ENQUEUE
+
+## Thanks
+
+Enormous thanks to Salvatore Sanfilippo (antirez) for writing
+[disque][https://github.com/antirez/disque] and
+[Andy McCurdy][https://github.com/andymccurdy], author of the
+[redis-py][https://github.com/andymccurdy/redis-py] module.
+
+[clients]: https://github.com/antirez/disque#client-libraries
