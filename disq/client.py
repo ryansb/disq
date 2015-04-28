@@ -336,6 +336,21 @@ class DisqueAlpha(object):
     def fastack(self, *jobs):
         return self.execute_command('FASTACK', *jobs)
 
+    def deljob(self, *jobs):
+        return self.execute_command('DELJOB', *jobs)
+
+    def show(self, job):
+        return self.execute_command('SHOW', job)
+
+    def scan(self):
+        raise NotImplementedError("Sorry, SCAN isn't implemented in disque "
+                                  "yet, so clients can't use it")
+
+    def enqueue(self, *jobs):
+        return self.execute_command('ENQUEUE', *jobs)
+
+    def dequeue(self, *jobs):
+        return self.execute_command('DEQUEUE', *jobs)
 
     # QUEUE COMMANDS
 
