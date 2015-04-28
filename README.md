@@ -39,6 +39,10 @@ c.getjob('queuename')
 - [ ] DEQUEUE
 - [ ] ENQUEUE
 
+## License
+
+This code is released under the ASL2.0, see the `LICENSE` file for details.
+
 ## Thanks
 
 Enormous thanks to Salvatore Sanfilippo (antirez) for writing
