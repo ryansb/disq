@@ -3,3 +3,6 @@
 AUTHORS
 ChangeLog
 dist/
+.tox
+*.egg
+*.egg-info

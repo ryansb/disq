@@ -62,7 +62,6 @@ class DisqueAlpha(object):
             'CONFIG GET': parse_config_get,
             'CONFIG RESETSTAT': bool_ok,
             'CONFIG SET': bool_ok,
-            'DEBUG OBJECT': parse_debug_object,
         },
         string_keys_to_dict('BGREWRITEAOF', lambda r: True),
     )
@@ -243,6 +242,9 @@ class DisqueAlpha(object):
 
     def cluster_info(self):
         return self.execute_command('CLUSTER INFO')
+
+    def hello(self):
+        return self.execute_command('HELLO')
 
     def info(self, section=None):
         """
