@@ -181,6 +181,9 @@ class DisqueAlpha(object):
         "Sets the current connection name"
         return self.execute_command('CLIENT SETNAME', name)
 
+    def client_pause(self, pause_msec):
+        return self.execute_command('CLIENT PAUSE', pause_msec)
+
     def config_get(self, pattern="*"):
         "Return a dictionary of configuration based on the ``pattern``"
         return self.execute_command('CONFIG GET', pattern)
