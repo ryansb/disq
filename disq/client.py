@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import six
-from collections import namedtuple
 
 from redis.connection import (ConnectionPool, UnixDomainSocketConnection,
                               Token)
