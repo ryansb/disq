@@ -7,6 +7,21 @@ def dq():
     return _get_client(disq.DisqueAlpha)
 
 
+@pytest.fixture()
+def dq2():
+    return _get_client(disq.DisqueAlpha, port=7712)
+
+
+@pytest.fixture()
+def dq3():
+    return _get_client(disq.DisqueAlpha, port=7713)
+
+
+@pytest.fixture()
+def dq4():
+    return _get_client(disq.DisqueAlpha, port=7714)
+
+
 def _get_client(cls, request=None, **kwargs):
     params = {'host': 'localhost', 'port': 7711}
     params.update(kwargs)
@@ -21,6 +36,6 @@ def _get_client(cls, request=None, **kwargs):
 
 
 class TestDisqueServerCommands(object):
-    def test_hello(self, dq):
-        h = dq.hello()
-        assert isinstance(h, list)
+    def test_multiclient(self, dq, dq2):
+        h1 = dq.cluster_nodes()
+        h2 = dq2.cluster_nodes()

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import six
+from collections import namedtuple
 
 from redis.connection import (ConnectionPool, UnixDomainSocketConnection,
                               Token)
@@ -23,7 +24,7 @@ from redis.exceptions import (
 )
 
 from redis.client import (dict_merge, string_keys_to_dict, parse_client_list,
-                          bool_ok, parse_config_get, parse_debug_object)
+                          bool_ok, parse_config_get)
 
 DisqueError = RedisError
 
@@ -32,6 +33,25 @@ def parse_job_resp(response):
     if response is None:
         return None
     return response
+
+
+ClusterNode = namedtuple('ClusterNode',
+                         ['id', 'address', 'flags', 'self', 'status'])
+
+
+def parse_cluster_nodes(response):
+    nodes = {}
+    for c in six.text_type(response).splitlines():
+        node = c.split(' ')
+        if node[2] == 'myself':
+            nodes['myself'] = ClusterNode(id=node[0], self=True,
+                                          address=node[1],
+                                          status=node[-1])
+        else:
+            nodes[node[0]] = ClusterNode(id=node[0], self=False,
+                                         address=node[1], flags=node[3],
+                                         status=node[-1])
+    return nodes
 
 
 class DisqueAlpha(object):
@@ -62,6 +82,7 @@ class DisqueAlpha(object):
             'CONFIG GET': parse_config_get,
             'CONFIG RESETSTAT': bool_ok,
             'CONFIG SET': bool_ok,
+            'CLUSTER NODES': parse_cluster_nodes,
         },
         string_keys_to_dict('BGREWRITEAOF', lambda r: True),
     )
