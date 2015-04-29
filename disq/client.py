@@ -32,19 +32,35 @@ DisqueError = RedisError
 def parse_job_resp(response):
     if response is None:
         return None
-    return response
-
-
-ClusterNode = namedtuple('ClusterNode', ['myself', 'id', 'address', 'flags',
-                                         'ping_sent', 'pong_rx', 'status'])
+    return [[bin_to_str(r[0]), bin_to_str(r[1]), six.binary_type(r[2])]
+            for r in response]
 
 
 def parse_cluster_nodes(response):
     nodes = {}
+    fields = ['myself', 'id', 'address', 'flags', 'ping_sent', 'pong_received',
+              'status']
     for c in six.binary_type(response).decode().splitlines():
         node = c.split(' ')
-        nodes[node[0]] = ClusterNode(node[2] == 'myself', *node)
+        nodes[node[0]] = dict(zip(fields, [node[2] == 'myself'] + node))
     return nodes
+
+
+def parse_hello(response):
+    fields = ['version', 'id', 'nodes']
+    return dict(zip(fields, response[:2] + [response[2:]]))
+
+
+def bin_to_int(raw):
+    return int(six.binary_type(raw).decode())
+
+
+def bin_to_str(raw):
+    return six.text_type(six.binary_type(raw).decode())
+
+
+def parse_time(response):
+    return bin_to_int(response[0]), bin_to_int(response[1])
 
 
 class DisqueAlpha(object):
@@ -65,7 +81,7 @@ class DisqueAlpha(object):
             'QLEN ACKJOB FASTACK', six.integer_types
         ),
         string_keys_to_dict(
-            'ADDJOB', six.binary_type
+            'ADDJOB', lambda r: six.text_type(six.binary_type(r).decode())
         ),
         {
             'CLIENT GETNAME': lambda r: r and six.text_type(r),
@@ -76,6 +92,8 @@ class DisqueAlpha(object):
             'CONFIG RESETSTAT': bool_ok,
             'CONFIG SET': bool_ok,
             'CLUSTER NODES': parse_cluster_nodes,
+            'HELLO': parse_hello,
+            'TIME': parse_time,
         },
         string_keys_to_dict('BGREWRITEAOF', lambda r: True),
     )

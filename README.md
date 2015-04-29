@@ -1,4 +1,4 @@
-# Disque-py
+# disq
 
 A [disque](https://github.com/antirez/disque) Python client.
 
