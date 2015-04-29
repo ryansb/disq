@@ -35,22 +35,15 @@ def parse_job_resp(response):
     return response
 
 
-ClusterNode = namedtuple('ClusterNode',
-                         ['id', 'address', 'flags', 'self', 'status'])
+ClusterNode = namedtuple('ClusterNode', ['myself', 'id', 'address', 'flags',
+                                         'ping_sent', 'pong_rx', 'status'])
 
 
 def parse_cluster_nodes(response):
     nodes = {}
-    for c in six.text_type(response).splitlines():
+    for c in six.binary_type(response).decode().splitlines():
         node = c.split(' ')
-        if node[2] == 'myself':
-            nodes['myself'] = ClusterNode(id=node[0], self=True,
-                                          address=node[1],
-                                          status=node[-1])
-        else:
-            nodes[node[0]] = ClusterNode(id=node[0], self=False,
-                                         address=node[1], flags=node[3],
-                                         status=node[-1])
+        nodes[node[0]] = ClusterNode(node[2] == 'myself', *node)
     return nodes
 
 
