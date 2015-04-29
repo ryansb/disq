@@ -1,0 +1,13 @@
+#!/bin/bash
+
+DISQUE_DIR="${DISQUE_DIR:-$(pwd -P)/disque}"
+DISQUE_CMD="${DISQUE_DIR}/src/disque"
+
+disque_kill () {
+    for i in $@; do
+        ${DISQUE_CMD} -p $i shutdown >/dev/null 2>&1
+    done
+    echo 'Cluster destroyed'
+}
+
+disque_kill $@

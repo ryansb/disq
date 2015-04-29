@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+ARCHIVE_URL="${ARCHIVE_URL:-https://github.com/antirez/disque/archive/master.tar.gz}"
+WORKING_DIR="${WORKING_DIR:-$(mktemp -d)}"
+DISQUE_DIR="${DISQUE_DIR:-${WORKING_DIR}/disque-master}"
+
+DISQUE_CMD="${DISQUE_DIR}/src/disque"
+DISQUE_SRV_CMD="${DISQUE_DIR}/src/disque-server"
+
+disque_download () {
+    if [ ! -d "${DISQUE_DIR}" ]; then
+        pushd "${WORKING_DIR}" >/dev/null
+        curl -s -L "${ARCHIVE_URL}" | tar xzf -
+        popd >/dev/null
+    fi
+}
+
+disque_build () {
+    pushd "${DISQUE_DIR}" >/dev/null
+    echo "Heyo $(pwd -P)"
+    make
+    popd >/dev/null
+}
+
+disque_serve () {
+    for i in $@; do
+        SRV_DIR="${WORKING_DIR}/${i}"
+        mkdir "${SRV_DIR}"
+        pushd "${SRV_DIR}" >/dev/null
+        ${DISQUE_SRV_CMD} --port ${i} >/dev/null 2>&1 &
+        disown
+        popd >/dev/null
+    done
+}
+
+disque_cluster () {
+    for i in ${@:2}; do
+        ${DISQUE_CMD} -p $1 cluster meet 127.0.0.1 $i >/dev/null 2>&1
+    done
+    echo 'Cluster created'
+}
+
+disque_download
+disque_build
+
+# start four disque servers
+disque_serve 7711 7712 7713 7714
+
+disque_cluster 7711 7712 7713 7714
+
+echo "To kill run:"
+echo "DISQUE_DIR="${DISQUE_DIR}" ./scripts/kill_disque 7711 7712 7713 7714"
