@@ -13,25 +13,13 @@
 # limitations under the License.
 
 
-class TestDisqueJobCommands(object):
-    def test_round_trip(self, dq):
-        qname = 'rttq'
-        assert dq.getjob('empty', timeout_ms=1) is None
-        id = dq.addjob(qname, 'foobar')
-        assert id
-        jobs = dq.getjob(qname, timeout_ms=1)
-        assert jobs
-        assert len(jobs) == 1
-        job = jobs[0]
-        assert job[0] == qname
-        assert job[1] == id
-        assert job[2] == b'foobar'
-
-    def test_del_job(self, dq):
-        qname = 'delq'
+class TestDisqueQueueCommands(object):
+    def test_qlen(self, dq):
+        qname = 'qlenq'
         assert dq.getjob(qname, timeout_ms=1) is None
-        id = dq.addjob(qname, 'foobar')
-
-        assert dq.qlen(qname) == 1
-        assert dq.deljob(id) == 1
-        assert dq.qlen(qname) == 0
+        for i in range(100):
+            dq.addjob(qname, 'foo {}'.format(i))
+            assert dq.qlen(qname) == i + 1
+        for i in range(100):
+            dq.getjob(qname)
+            assert dq.qlen(qname) == 99 - i

@@ -78,7 +78,7 @@ class DisqueAlpha(object):
             'GETJOB', parse_job_resp
         ),
         string_keys_to_dict(
-            'QLEN ACKJOB FASTACK', six.integer_types
+            'QLEN ACKJOB FASTACK', int
         ),
         string_keys_to_dict(
             'ADDJOB', lambda r: six.text_type(six.binary_type(r).decode())
@@ -403,5 +403,5 @@ class DisqueAlpha(object):
         raise NotImplementedError("Sorry, QSTAT isn't implemented in disque "
                                   "yet, so clients can't use it")
 
-    def qpeek(self, queue, count):
+    def qpeek(self, queue, count=1):
         return self.execute_command('QPEEK', queue, count)
