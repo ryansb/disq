@@ -30,7 +30,7 @@ class TestDisqueServerCommands(object):
     def test_hello(self, dq):
         hi = dq.hello()
         assert len(hi['nodes']) == 4
-        assert hi['id']in [h[0] for h in hi['nodes']]
+        assert hi['id'] in [h[0] for h in hi['nodes']]
 
     def test_rewriteaof(self, dq, dq2, dq3, dq4):
         assert dq.bgrewriteaof()

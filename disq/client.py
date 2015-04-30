@@ -26,6 +26,8 @@ from redis.exceptions import (
 from redis.client import (dict_merge, string_keys_to_dict, parse_client_list,
                           bool_ok, parse_config_get, parse_info)
 
+from disq.rolling_counter import RollingCounter
+
 DisqueError = RedisError
 
 
@@ -73,6 +75,9 @@ class DisqueAlpha(object):
     Connection and Pipeline derive from this, implementing how
     the commands are sent and received to the Redis server
     """
+
+    _job_score = None
+
     RESPONSE_CALLBACKS = dict_merge(
         string_keys_to_dict(
             'GETJOB', parse_job_resp
@@ -122,37 +127,60 @@ class DisqueAlpha(object):
                  socket_keepalive=None, socket_keepalive_options=None,
                  connection_pool=None, unix_socket_path=None,
                  encoding='utf-8', encoding_errors='strict',
-                 decode_responses=False, retry_on_timeout=False):
+                 decode_responses=False, retry_on_timeout=False,
+                 job_origin_ttl_secs=5):
+        """
+        job_origin_ttl_secs is the number of seconds to store counts of
+        incoming jobs. The higher the throughput you're expecting, the lower
+        this number should be.
+        """
+
+        kwargs = {
+            'password': password,
+            'socket_timeout': socket_timeout,
+            'encoding': encoding,
+            'encoding_errors': encoding_errors,
+            'decode_responses': decode_responses,
+            'retry_on_timeout': retry_on_timeout,
+            'db': 0,
+        }
+        # based on input, setup appropriate connection args
+        if unix_socket_path is not None:
+            kwargs.update({
+                'path': unix_socket_path,
+                'connection_class': UnixDomainSocketConnection
+            })
+        else:
+            # TCP specific options
+            kwargs.update({
+                'host': host,
+                'port': port,
+                'socket_connect_timeout': socket_connect_timeout,
+                'socket_keepalive': socket_keepalive,
+                'socket_keepalive_options': socket_keepalive_options,
+            })
 
         if not connection_pool:
-            kwargs = {
-                'password': password,
-                'socket_timeout': socket_timeout,
-                'encoding': encoding,
-                'encoding_errors': encoding_errors,
-                'decode_responses': decode_responses,
-                'retry_on_timeout': retry_on_timeout
-            }
-            # based on input, setup appropriate connection args
-            if unix_socket_path is not None:
-                kwargs.update({
-                    'path': unix_socket_path,
-                    'connection_class': UnixDomainSocketConnection
-                })
-            else:
-                # TCP specific options
-                kwargs.update({
-                    'host': host,
-                    'port': port,
-                    'socket_connect_timeout': socket_connect_timeout,
-                    'socket_keepalive': socket_keepalive,
-                    'socket_keepalive_options': socket_keepalive_options,
-                })
-
             connection_pool = ConnectionPool(**kwargs)
-        self.connection_pool = connection_pool
 
         self.response_callbacks = self.__class__.RESPONSE_CALLBACKS.copy()
+
+        self.connection_pool = {'default': connection_pool}
+        self.default_node = 'default'
+
+        self._job_score = RollingCounter(ttl_secs=job_origin_ttl_secs)
+
+        self.__connect_cluster(kwargs)
+
+    def __connect_cluster(self, connection_kwargs):
+        hi = self.hello()
+
+        self.default_node = hi['id'][:8]
+        self.connection_pool.pop('default')
+        for node, ip, port, version in hi['nodes']:
+            connection_kwargs.update(dict(host=ip, port=port))
+            self.connection_pool[node[:8]] = ConnectionPool(
+                **connection_kwargs)
 
     def __repr__(self):
         return "%s<%s>" % (type(self).__name__, repr(self.connection_pool))
@@ -161,11 +189,24 @@ class DisqueAlpha(object):
         "Set a custom Response Callback"
         self.response_callbacks[command] = callback
 
+    __read_cmds = {'GETJOB': 0, 'ACKJOB': 0, 'FASTACK': 0}
+
+    def _get_connection(self, command_name, **options):
+        node = self.default_node
+        if command_name in self.__read_cmds:
+            node = self._job_score.max() or self.default_node
+
+        return self.connection_pool.get(
+            node, self.connection_pool[self.default_node]
+        ).get_connection(command_name, **options), self.default_node
+
+    def _release_connection(self, connection, node):
+        return self.connection_pool[node].release(connection)
+
     def execute_command(self, *args, **options):
         "Execute a command and return a parsed response"
-        pool = self.connection_pool
         command_name = args[0]
-        connection = pool.get_connection(command_name, **options)
+        connection, node = self._get_connection(command_name, **options)
         try:
             connection.send_command(*args)
             return self.parse_response(connection, command_name, **options)
@@ -176,7 +217,7 @@ class DisqueAlpha(object):
             connection.send_command(*args)
             return self.parse_response(connection, command_name, **options)
         finally:
-            pool.release(connection)
+            self._release_connection(connection, node)
 
     def parse_response(self, connection, command_name, **options):
         "Parses a response from the Redis server"
@@ -369,9 +410,16 @@ class DisqueAlpha(object):
         """
         if queues is None:
             queues = []
-        return self.execute_command(
+        jobs = self.execute_command(
             'GETJOB', Token('TIMEOUT'), timeout_ms, Token('COUNT'), count,
             Token('FROM'), queue, *queues)
+        if jobs is None:
+            return
+        for _, job_id, _ in jobs:
+            # pull the origin node out of the job_id
+            # https;//github.com/antirez/disque#job-ids
+            self._job_score.add(job_id[2:10])
+        return jobs
 
     def ackjob(self, *jobs):
         return self.execute_command('ACKJOB', *jobs)

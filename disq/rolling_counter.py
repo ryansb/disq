@@ -29,6 +29,8 @@ class RollingCounter(object):
     """
     def __init__(self, ttl_secs=10):
         self._counts = defaultdict(sortedlist)
+        if ttl_secs <= 0:
+            raise ValueError("TTL must be >=0")
         self._ttl_seconds = ttl_secs
 
     def add(self, id):

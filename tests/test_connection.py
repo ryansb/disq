@@ -19,4 +19,4 @@ class TestDisqueConnection(object):
     def test_from_url(self):
         c = disq.Disque.from_url('disque://localhost:7711')
         assert c.hello()
-        assert c.__repr__().startswith('DisqueAlpha<ConnectionPool<Connection')
+        assert c.__repr__().startswith('DisqueAlpha')
