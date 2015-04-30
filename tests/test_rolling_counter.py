@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import time
 from disq.rolling_counter import RollingCounter
 
@@ -30,6 +29,7 @@ class TestRollingCounter(object):
             rc.add('quux')
         assert rc.max() == 'foo'
         assert rc.min() == 'bar'
+        assert [x[0] for x in rc.ranked()] == ['bar', 'baz', 'quux', 'foo']
 
     def test_expiration(self):
         rc = RollingCounter(ttl_secs=0.5)
@@ -38,5 +38,10 @@ class TestRollingCounter(object):
         for _ in range(5):
             rc.add('bar')
         assert len(rc.keys()) == 2
+        assert rc.count('foo') == 10
         time.sleep(1)
         assert len(rc.keys()) == 0
+        assert rc.max() is None
+        assert rc.min() is None
+        assert not rc.ranked()
+        assert rc.count('foo') == 0
