@@ -36,17 +36,17 @@ class RollingCounter(object):
     def add(self, id):
         self._counts[id].add(time.time())
 
-    def max(self):
+    def max(self, default=None):
         r = self._rank(reverse=True)
         if len(r):
             return r[0]
-        return None
+        return default
 
-    def min(self):
+    def min(self, default=None):
         r = self._rank(reverse=False)
         if len(r):
             return r[0]
-        return None
+        return default
 
     def ranked(self):
         self._expire()

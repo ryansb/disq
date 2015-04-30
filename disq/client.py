@@ -175,11 +175,11 @@ class DisqueAlpha(object):
     def __connect_cluster(self, connection_kwargs):
         hi = self.hello()
 
-        self.default_node = hi['id'][:8]
+        self.default_node = bin_to_str(hi['id'][:8])
         self.connection_pool.pop('default')
         for node, ip, port, version in hi['nodes']:
             connection_kwargs.update(dict(host=ip, port=port))
-            self.connection_pool[node[:8]] = ConnectionPool(
+            self.connection_pool[bin_to_str(node[:8])] = ConnectionPool(
                 **connection_kwargs)
 
     def __repr__(self):
@@ -194,11 +194,14 @@ class DisqueAlpha(object):
     def _get_connection(self, command_name, **options):
         node = self.default_node
         if command_name in self.__read_cmds:
-            node = self._job_score.max() or self.default_node
+            node = self._job_score.max(node)
 
-        return self.connection_pool.get(
-            node, self.connection_pool[self.default_node]
-        ).get_connection(command_name, **options), self.default_node
+        pool = self.connection_pool.get(node)
+        if pool is None:
+            pool = self.connection_pool[self.default_node]
+            node = self.default_node
+
+        return pool.get_connection(command_name, **options), node
 
     def _release_connection(self, connection, node):
         return self.connection_pool[node].release(connection)
