@@ -19,11 +19,12 @@ from redis.connection import (ConnectionPool, UnixDomainSocketConnection,
 from redis.exceptions import (
     ConnectionError,
     RedisError,
+    ResponseError,
     TimeoutError,
 )
 
 from redis.client import (dict_merge, string_keys_to_dict, parse_client_list,
-                          bool_ok, parse_config_get)
+                          bool_ok, parse_config_get, parse_info)
 
 DisqueError = RedisError
 
@@ -83,6 +84,7 @@ class DisqueAlpha(object):
             'ADDJOB', lambda r: six.text_type(six.binary_type(r).decode())
         ),
         {
+            'INFO': parse_info,
             'CLIENT GETNAME': lambda r: r and six.text_type(r),
             'CLIENT KILL': bool_ok,
             'CLIENT LIST': parse_client_list,
@@ -279,13 +281,13 @@ class DisqueAlpha(object):
 
     def info(self, section=None):
         """
-        Returns a dictionary containing information about the Redis server
+        Returns a dictionary containing information about the Disque server
 
         The ``section`` option can be used to select a specific section
         of information
 
-        The section option is not supported by older versions of Redis Server,
-        and will generate ResponseError
+        Valid section names are:
+            SERVER, CLIENTS, MEMORY, JOBS, QUEUES, PERSISTENCE, STATS, CPU
         """
         if section is None:
             return self.execute_command('INFO')

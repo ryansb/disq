@@ -13,12 +13,16 @@ class RollingCounter(object):
     stay in the count.
 
     Example:
-        rc = RollingCounter(ttl_secs=0.5)
-        rc.add('foo')
-        rc.max() # 'foo'
-        time.sleep(1)
-        rc.max() # None
-        rc.keys() # []
+
+    >>> rc = RollingCounter(ttl_secs=0.5)
+    >>> rc.add('foo')
+    >>> rc.max()
+    'foo'
+    >>> time.sleep(1)
+    >>> rc.max()
+    None
+    >>> rc.keys()
+    []
 
     Usage:
         use .add('itemname') to increment a count for some id

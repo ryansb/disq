@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import six
-
-import disq
 
 
 class TestDisqueServerCommands(object):
@@ -40,3 +37,13 @@ class TestDisqueServerCommands(object):
         assert dq2.bgrewriteaof()
         assert dq3.bgrewriteaof()
         assert dq4.bgrewriteaof()
+
+    def test_info(self, dq):
+        i = dq.info()
+        assert i.keys()
+        i = dq.info('SERVER')
+        assert type(i['process_id']) in six.integer_types
+
+    def test_time(self, dq):
+        t = dq.time()
+        assert len(t) == 2

@@ -12,25 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pkg_resources
+import sys
+import pytest
 
-from disq.client import DisqueAlpha
+from disq.client import bin_to_int
 
-from redis.exceptions import (
-    ConnectionError,
-    RedisError,
-    ResponseError,
-    TimeoutError,
-)
 
-Disque = DisqueAlpha
-
-__all__ = ['DisqueAlpha',
-           'Disque',
-           'ConnectionError',
-           'RedisError',
-           'ResponseError',
-           'TimeoutError',
-           ]
-
-__version__ = pkg_resources.get_distribution('disq').version
+class TestConversions(object):
+    def test_binary_to_int(self):
+        assert bin_to_int(b'0') == 0
+        assert bin_to_int(b'10000') == 10000
+        assert bin_to_int(b'-90') == -90
+        if sys.version_info[0] < 3:
+            with pytest.raises(ValueError):
+                bin_to_int('abc')
+            assert bin_to_int(1) == 1
+        else:
+            with pytest.raises(TypeError):
+                bin_to_int('abc')
+            with pytest.raises(ValueError):
+                bin_to_int(1)

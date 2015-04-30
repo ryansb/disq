@@ -12,25 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pkg_resources
+import disq
 
-from disq.client import DisqueAlpha
 
-from redis.exceptions import (
-    ConnectionError,
-    RedisError,
-    ResponseError,
-    TimeoutError,
-)
-
-Disque = DisqueAlpha
-
-__all__ = ['DisqueAlpha',
-           'Disque',
-           'ConnectionError',
-           'RedisError',
-           'ResponseError',
-           'TimeoutError',
-           ]
-
-__version__ = pkg_resources.get_distribution('disq').version
+class TestDisqueConnection(object):
+    def test_from_url(self):
+        c = disq.Disque.from_url('disque://localhost:7711')
+        assert c.hello()
+        assert c.__repr__().startswith('DisqueAlpha<ConnectionPool<Connection')
