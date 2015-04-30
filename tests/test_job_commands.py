@@ -80,28 +80,3 @@ class TestDisqueJobCommands(object):
             dq.addjob(qname, 'foobar {}'.format(i), maxlen=10)
         with pytest.raises(disq.ResponseError):
             dq.addjob(qname, 'foobar', maxlen=10)
-
-
-def addjob(dq, **kwargs):
-    def inner():
-        dq.addjob(**kwargs)
-    return inner
-
-
-def test_addjob_benchmarks(dq, benchmark):
-    qname = 'benchwriteq'
-    assert dq.getjob(qname, timeout_ms=1) is None
-    benchmark(addjob(dq, queue=qname, body='foo'))
-    assert dq.qlen(qname)
-
-def test_addjob_no_replicate_bench(dq, benchmark):
-    qname = 'benchnonreplq'
-    assert dq.getjob(qname, timeout_ms=1) is None
-    benchmark(addjob(dq, queue=qname, body='foo', replicate=1))
-    assert dq.qlen(qname)
-
-def test_addjob_async_bench(dq, benchmark):
-    qname = 'benchasyncq'
-    assert dq.getjob(qname, timeout_ms=1) is None
-    benchmark(addjob(dq, queue=qname, body='foo', async=True))
-    assert dq.qlen(qname)
