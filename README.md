@@ -10,9 +10,9 @@ Redis commands with the disque ones.
 ## Usage
 
 ```
-from disq import DisqueAlpha
+from disq import Disque
 
-c = DisqueAlpha()
+c = Disque() # connects to localhost:7711 by default
 c.addjob('queuename', 'body') # takes all ADDJOB arguments
 # b'DI... job id ...SQ'
 c.getjob('queuename')
@@ -21,25 +21,20 @@ c.getjob('queuename')
 
 ## Status
 
-- [x] Server commands (slowlog, clients, etc)
-- [x] ADDJOB
-- [x] GETJOB
-- [x] ACKJOB
-- [x] FASTACK
-- [x] QLEN
-- [x] QPEEK
-- [x] DELJOB
-- [x] SHOW
-- [x] DEQUEUE
-- [x] ENQUEUE
+This library is ready to use with single or multi-node clusters. All commands
+are implemented except for `QSTAT` and `SCAN`, which don't exist in the disque
+server yet.
 
-## TODO
+## Features
 
-- [ ] Make connection pool support multiple nodes as specified [here][clients]
-- [ ] Write tests
-- [ ] Write benchmarks
-- [ ] QSTAT
-- [ ] SCAN
+### Connection Balancing
+
+As specified in the [disque README][clients], disq directs read and ack
+operations (GETJOB, ACKJOB, FASTACK) to whichever member of the cluster it has
+received the most jobs from in the last N seconds.
+
+To change the length of the job count window, use the `job_origin_ttl_secs`
+argument when creating the disque client.
 
 ## License
 
