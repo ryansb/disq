@@ -27,6 +27,7 @@ from redis.client import (dict_merge, string_keys_to_dict, parse_client_list,
                           bool_ok, parse_config_get, parse_info)
 
 from disq.rolling_counter import RollingCounter
+from disq.parsers import bin_to_str, bin_to_int
 
 DisqueError = RedisError
 
@@ -51,14 +52,6 @@ def parse_cluster_nodes(response):
 def parse_hello(response):
     fields = ['version', 'id', 'nodes']
     return dict(zip(fields, response[:2] + [response[2:]]))
-
-
-def bin_to_int(raw):
-    return int(six.binary_type(raw).decode())
-
-
-def bin_to_str(raw):
-    return six.text_type(six.binary_type(raw).decode())
 
 
 def parse_time(response):
