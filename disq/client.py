@@ -27,35 +27,10 @@ from redis.client import (dict_merge, string_keys_to_dict, parse_client_list,
                           bool_ok, parse_config_get, parse_info)
 
 from disq.rolling_counter import RollingCounter
-from disq.parsers import bin_to_str, bin_to_int
+from disq.parsers import (bin_to_str, bin_to_int, parse_job_resp,
+                          parse_cluster_nodes, parse_hello, parse_time)
 
 DisqueError = RedisError
-
-
-def parse_job_resp(response):
-    if response is None:
-        return None
-    return [[bin_to_str(r[0]), bin_to_str(r[1]), six.binary_type(r[2])]
-            for r in response]
-
-
-def parse_cluster_nodes(response):
-    nodes = {}
-    fields = ['myself', 'id', 'address', 'flags', 'ping_sent', 'pong_received',
-              'status']
-    for c in six.binary_type(response).decode().splitlines():
-        node = c.split(' ')
-        nodes[node[0]] = dict(zip(fields, [node[2] == 'myself'] + node))
-    return nodes
-
-
-def parse_hello(response):
-    fields = ['version', 'id', 'nodes']
-    return dict(zip(fields, response[:2] + [response[2:]]))
-
-
-def parse_time(response):
-    return bin_to_int(response[0]), bin_to_int(response[1])
 
 
 class DisqueAlpha(object):

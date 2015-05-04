@@ -27,6 +27,32 @@ def bin_to_str(raw):
     return six.text_type(six.binary_type(raw).decode())
 
 
+def parse_job_resp(response):
+    if response is None:
+        return None
+    return [[bin_to_str(r[0]), bin_to_str(r[1]), six.binary_type(r[2])]
+            for r in response]
+
+
+def parse_cluster_nodes(response):
+    nodes = {}
+    fields = ['myself', 'id', 'address', 'flags', 'ping_sent', 'pong_received',
+              'status']
+    for c in six.binary_type(response).decode().splitlines():
+        node = c.split(' ')
+        nodes[node[0]] = dict(zip(fields, [node[2] == 'myself'] + node))
+    return nodes
+
+
+def parse_hello(response):
+    fields = ['version', 'id', 'nodes']
+    return dict(zip(fields, response[:2] + [response[2:]]))
+
+
+def parse_time(response):
+    return bin_to_int(response[0]), bin_to_int(response[1])
+
+
 def read_json_job(response):
     if response is None:
         return None
