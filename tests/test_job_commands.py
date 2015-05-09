@@ -24,9 +24,13 @@ def test_round_trip(dq):
     assert dq.getjob('empty', timeout_ms=1) is None
     id = dq.addjob(qname, 'foobar')
     assert id
-    jobs = dq.getjob(qname, timeout_ms=1)
-    assert jobs
-    assert len(jobs) == 1
+    job = dq.getjob(qname, timeout_ms=1)
+    assert len(job) == 3
+    assert job[0] == qname
+    assert job[1] == id
+    assert job[2] == b'foobar'
+    id = dq.addjob(qname, 'foobar')
+    jobs = dq.getjobs(qname, timeout_ms=1)
     job = jobs[0]
     assert job[0] == qname
     assert job[1] == id
@@ -98,4 +102,4 @@ def test_json_job():
 
     q.addjob(qname, json.dumps(job))
     j = q.getjob(qname)
-    assert j[0][2] == job
+    assert j[2] == job

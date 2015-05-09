@@ -364,7 +364,27 @@ class DisqueAlpha(object):
 
         return self.execute_command(*args)
 
-    def getjob(self, queue, timeout_ms=0, count=1, queues=None):
+    def getjobs(self, queue, timeout_ms=0, count=1, queues=None):
+        """
+        This function returns a list of 3-element lists
+        [
+            [queue, job1_id, b'body'],
+            [queue, job2_id, b'body'],
+            [queue, job3_id, b'body']
+        ]
+        """
+        return self._job_cmd(queue, timeout_ms, count, queues)
+
+    def getjob(self, queue, timeout_ms=0, queues=None):
+        """
+        This function returns a 3-element list
+        [queue, job_id, b'body']
+        """
+        j = self._job_cmd(queue, timeout_ms, 1, queues)
+        if j:
+            return j[0]
+
+    def _job_cmd(self, queue, timeout_ms=0, count=1, queues=None):
         """ This function accepts a queue name as "queue" and a list of
         additional queues as "queues="
 
