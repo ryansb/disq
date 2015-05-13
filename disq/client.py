@@ -96,13 +96,13 @@ class DisqueAlpha(object):
                  connection_pool=None, unix_socket_path=None,
                  encoding='utf-8', encoding_errors='strict',
                  decode_responses=False, retry_on_timeout=False,
-                 job_origin_ttl_secs=5):
+                 job_origin_ttl_secs=5, record_job_origin=False):
         """
         job_origin_ttl_secs is the number of seconds to store counts of
         incoming jobs. The higher the throughput you're expecting, the lower
         this number should be.
         """
-
+        self.record_job_origin = record_job_origin
         kwargs = {
             'password': password,
             'socket_timeout': socket_timeout,
@@ -161,7 +161,7 @@ class DisqueAlpha(object):
 
     def _get_connection(self, command_name, **options):
         node = self.default_node
-        if command_name in self.__read_cmds:
+        if self.record_job_origin and command_name in self.__read_cmds:
             node = self._job_score.max(node)
 
         pool = self.connection_pool.get(node)
@@ -406,10 +406,11 @@ class DisqueAlpha(object):
             Token('FROM'), queue, *queues)
         if jobs is None:
             return
-        for _, job_id, _ in jobs:
-            # pull the origin node out of the job_id
-            # https;//github.com/antirez/disque#job-ids
-            self._job_score.add(job_id[2:10])
+        if self.record_job_origin:
+            for _, job_id, _ in jobs:
+                # pull the origin node out of the job_id
+                # https;//github.com/antirez/disque#job-ids
+                self._job_score.add(job_id[2:10])
         return jobs
 
     def ackjob(self, *jobs):

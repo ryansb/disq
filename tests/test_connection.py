@@ -23,12 +23,12 @@ def test_connection_from_url():
 
 def test_connection_switch_workload():
     qname = 'swapworkloadq'
-    first = disq.Disque.from_url('disque://localhost:7711')
+    first = disq.Disque(port=7711, record_job_origin=True)
 
     # add jobs on both nodes, but more on node 1
     for _ in range(90):
         first.addjob(qname, 'foobar')
-    second = disq.Disque.from_url('disque://localhost:7712')
+    second = disq.Disque(port=7712, record_job_origin=True)
     for _ in range(10):
         second.addjob(qname, 'foobar')
 
