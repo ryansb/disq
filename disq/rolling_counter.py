@@ -1,8 +1,7 @@
-import time
-from collections import defaultdict
-
 import six
-from blist import sortedlist
+import time
+from bisect import bisect
+from collections import defaultdict
 
 
 class RollingCounter(object):
@@ -28,13 +27,13 @@ class RollingCounter(object):
         use .add('itemname') to increment a count for some id
     """
     def __init__(self, ttl_secs=10):
-        self._counts = defaultdict(sortedlist)
+        self._counts = defaultdict(list)
         if ttl_secs <= 0:
             raise ValueError("TTL must be >=0")
         self._ttl_seconds = ttl_secs
 
     def add(self, id):
-        self._counts[id].add(time.time())
+        self._counts[id].append(time.time())
 
     def max(self, default=None):
         r = self._rank(reverse=True)
@@ -77,7 +76,7 @@ class RollingCounter(object):
             # find the location where all times are less than (current - ttl)
             # and delete all lesser elements
             del self._counts[k][
-                :self._counts[k].bisect(time.time() - self._ttl_seconds)
+                :bisect(self._counts[k], time.time() - self._ttl_seconds)
             ]
             if len(self._counts[k]) == 0:
                 self.remove(k)
