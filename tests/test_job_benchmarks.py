@@ -18,6 +18,11 @@ def addjob(dq, **kwargs):
         dq.addjob(**kwargs)
     return inner
 
+def getjob(dq, **kwargs):
+    def inner():
+        dq.getjob(**kwargs)
+    return inner
+
 
 def test_addjob_benchmarks(dq, benchmark):
     qname = 'benchwriteq'
@@ -38,3 +43,10 @@ def test_addjob_async_bench(dq, benchmark):
     assert dq.getjob(qname, timeout_ms=1) is None
     benchmark(addjob(dq, queue=qname, body='foo', async=True))
     assert dq.qlen(qname)
+
+def test_getjob_bench(dq, benchmark):
+    qname = 'benchjobconsume'
+    assert dq.getjob(qname, timeout_ms=1) is None
+    for _ in xrange(10000):
+        dq.addjob(queue=qname, body='foo')
+    benchmark(getjob(dq, queue=qname, timeout_ms=1))
