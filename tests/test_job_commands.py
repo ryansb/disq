@@ -88,7 +88,7 @@ def test_overcrowded_job(dq, dq2):
     qname = 'crowdedq'
     assert dq.getjob(qname, timeout_ms=1) is None
     for i in range(11):
-        dq.addjob(qname, 'foobar {}'.format(i), maxlen=10)
+        dq.addjob(qname, 'foobar {0}'.format(i), maxlen=10)
     with pytest.raises(disq.ResponseError):
         dq.addjob(qname, 'foobar', maxlen=10)
 

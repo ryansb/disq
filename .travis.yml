@@ -1,0 +1,18 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+  - "3.2"
+  - "3.3"
+  - "3.4"
+sudo: false
+cache:
+  directories:
+    - disque
+before_install:
+  - $PWD/scripts/run_disque
+install:
+  - pip install -r requirements.txt
+  - pip install -r test-requirements.txt
+  - python setup.py install
+script: py.test .

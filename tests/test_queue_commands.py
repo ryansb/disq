@@ -18,7 +18,7 @@ class TestDisqueQueueCommands(object):
         qname = 'qlenq'
         assert dq.getjob(qname, timeout_ms=1) is None
         for i in range(100):
-            dq.addjob(qname, 'foo {}'.format(i))
+            dq.addjob(qname, 'foo {0}'.format(i))
             assert dq.qlen(qname) == i + 1
         for i in range(100):
             dq.getjob(qname)
@@ -79,4 +79,4 @@ class TestDisqueQueueCommands(object):
 
     def _populate_queues(self, dq):
         for i in range(512):
-            dq.addjob("testq{}".format(i), 'foobar')
+            dq.addjob("testq{0}".format(i), 'foobar')
