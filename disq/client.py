@@ -444,5 +444,21 @@ class DisqueAlpha(object):
         raise NotImplementedError("Sorry, QSTAT isn't implemented in disque "
                                   "yet, so clients can't use it")
 
+    def qscan(self, cursor=0, count=0, busyloop=False,
+              minlen=-1, maxlen=-1, importrate=-1):
+        args = ['QSCAN', cursor]
+        if busyloop:
+            args += [Token('BUSYLOOP')]
+        if count > 0:
+            args += [Token('COUNT'), count]
+        if minlen > -1:
+            args += [Token('MINLEN'), minlen]
+        if maxlen > -1:
+            args += [Token('MAXLEN'), maxlen]
+        if importrate > -1:
+            args += [Token('IMPORTRATE'), importrate]
+
+        return self.execute_command(*args)
+
     def qpeek(self, queue, count=1):
         return self.execute_command('QPEEK', queue, count)

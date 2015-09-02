@@ -23,3 +23,60 @@ class TestDisqueQueueCommands(object):
         for i in range(100):
             dq.getjob(qname)
             assert dq.qlen(qname) == 99 - i
+
+    def test_qscan(self, dq):
+        dq.addjob('testq', 'foobar')
+        result = dq.qscan()
+        assert result[0] == b'0'
+        assert result[1] == [b'testq']
+
+    def test_qscan_cursor(self, dq):
+        self._populate_queues(dq)
+        queues = []
+        cursor = None
+
+        while cursor != 0:
+            cursor, new_queues = dq.qscan(cursor or 0)
+            queues += new_queues
+            cursor = int(cursor)
+
+        assert len(list(set(queues))) == 512
+
+    def test_qscan_busyloop(self, dq):
+        self._populate_queues(dq)
+        result = dq.qscan(busyloop=True)
+        assert len(list(set(result[1]))) == 512
+
+    def test_qscan_minlen(self, dq):
+        dq.addjob('testq1', 'foobar1')
+        dq.addjob('testq2', 'foobar1')
+        dq.addjob('testq2', 'foobar2')
+
+        result = dq.qscan(0, minlen=2, busyloop=True)
+        assert result[1] == [b'testq2']
+
+    def test_qscan_maxlen(self, dq):
+        dq.addjob('testq1', 'foobar1')
+        dq.addjob('testq2', 'foobar1')
+        dq.addjob('testq2', 'foobar2')
+
+        result = dq.qscan(0, maxlen=1, busyloop=True)
+        assert result[1] == [b'testq1']
+
+    def test_qscan_importrate(self, dq, dq2):
+        dq.addjob('testq1', 'foobar')
+        dq.addjob('testq2', 'foobar')
+        dq.addjob('testq3', 'foobar')
+        dq.addjob('testq4', 'foobar')
+
+        dq2.getjob('testq1')
+        dq2.getjob('testq2')
+        dq2.getjob('testq3')
+        dq2.getjob('testq4')
+
+        result = dq2.qscan(importrate=1, busyloop=True)
+        assert len(result[1]) == 4
+
+    def _populate_queues(self, dq):
+        for i in range(512):
+            dq.addjob("testq{}".format(i), 'foobar')
