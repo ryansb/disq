@@ -11,12 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import six
 
 
 def addjob(dq, **kwargs):
     def inner():
         dq.addjob(**kwargs)
     return inner
+
 
 def getjob(dq, **kwargs):
     def inner():
@@ -44,9 +46,10 @@ def test_addjob_async_bench(dq, benchmark):
     benchmark(addjob(dq, queue=qname, body='foo', async=True))
     assert dq.qlen(qname)
 
+
 def test_getjob_bench(dq, benchmark):
     qname = 'benchjobconsume'
     assert dq.getjob(qname, timeout_ms=1) is None
-    for _ in xrange(10000):
+    for _ in six.range(10000):
         dq.addjob(queue=qname, body='foo')
     benchmark(getjob(dq, queue=qname, timeout_ms=1))
