@@ -50,6 +50,6 @@ def test_addjob_async_bench(dq, benchmark):
 def test_getjob_bench(dq, benchmark):
     qname = 'benchjobconsume'
     assert dq.getjob(qname, timeout_ms=1) is None
-    for _ in six.range(10000):
+    for _ in six.moves.range(10000):
         dq.addjob(queue=qname, body='foo')
     benchmark(getjob(dq, queue=qname, timeout_ms=1))
