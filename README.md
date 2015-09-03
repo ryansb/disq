@@ -2,7 +2,7 @@
 
 A [disque](https://github.com/antirez/disque) Python client.
 
-[ ![Codeship Status for ryansb/disq](https://codeship.com/projects/d4928e10-d02e-0132-8d50-1a50b84b9184/status?branch=master)](https://codeship.com/projects/76941)
+[ ![Build Status](https://travis-ci.org/ryansb/disq.svg)](https://travis-ci.org/ryansb/disq)
 
 Under the hood, this used redis-py's HiRedis implementation and switches out
 Redis commands with the disque ones.
